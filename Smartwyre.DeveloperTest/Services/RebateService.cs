@@ -1,4 +1,5 @@
-﻿using Smartwyre.DeveloperTest.Data;
+﻿using System.ComponentModel;
+using Smartwyre.DeveloperTest.Data;
 using Smartwyre.DeveloperTest.Types;
 
 namespace Smartwyre.DeveloperTest.Services;
@@ -17,11 +18,25 @@ public class RebateService : IRebateService
 
         var rebateAmount = 0m;
         
-        result.Success = ValidateRequest(rebate, product, request, ref rebateAmount);
+        result.Success = ValidateRequest(rebate, product, request);
 
         if (result.Success)
         {
             var storeRebateDataStore = new RebateDataStore();
+            switch (rebate.Incentive)
+            {
+                case IncentiveType.FixedCashAmount:
+                    rebateAmount = rebate.Amount;
+                    break;
+                case IncentiveType.FixedRateRebate:
+                    rebateAmount += product.Price * rebate.Percentage * request.Volume;
+                    break;
+                case IncentiveType.AmountPerUom:
+                    rebateAmount += rebate.Amount * request.Volume;
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException("${rebate.Incentive.ToString()} is not a valid incentive}");
+            }
             storeRebateDataStore.StoreCalculationResult(rebate, rebateAmount);
         }
 
@@ -30,7 +45,7 @@ public class RebateService : IRebateService
 
     // I chose to extract all the validation logic into its own method
     // This makes sure that Calculate() is only focused on calculation
-    private bool ValidateRequest(Rebate rebate, Product product, CalculateRebateRequest request, ref decimal rebateAmount)
+    private bool ValidateRequest(Rebate rebate, Product product, CalculateRebateRequest request)
     {
         // I chose to do an early return here. There's no reason to continue executing following statements because we already know the request is invalid
         // This also fixes a bug where a Null Reference Exception would be thrown if IncentiveType is FixedCashAmount and product is NULL
@@ -48,8 +63,6 @@ public class RebateService : IRebateService
                 {
                     return false;
                 }
-                
-                rebateAmount = rebate.Amount;
                 break;
             
             case IncentiveType.FixedRateRebate:
@@ -60,8 +73,6 @@ public class RebateService : IRebateService
                 {
                     return false;
                 }
-                
-                rebateAmount += product.Price * rebate.Percentage * request.Volume;
                 break;
             
             case IncentiveType.AmountPerUom:
@@ -71,8 +82,6 @@ public class RebateService : IRebateService
                 {
                     return false;
                 }
-                
-                rebateAmount += rebate.Amount * request.Volume;
                 break;
         }
 
