@@ -44,11 +44,8 @@ public class RebateService : IRebateService
         switch (rebate.Incentive)
         {
             case IncentiveType.FixedCashAmount:
-                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedCashAmount))
-                {
-                    result.Success = false;
-                }
-                else if (rebate.Amount == 0)
+                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedCashAmount)
+                    || rebate.Amount == 0)
                 {
                     result.Success = false;
                 }
@@ -60,11 +57,10 @@ public class RebateService : IRebateService
                 break;
 
             case IncentiveType.FixedRateRebate:
-                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedRateRebate))
-                {
-                    result.Success = false;
-                }
-                else if (rebate.Percentage == 0 || product.Price == 0 || request.Volume == 0)
+                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedRateRebate)
+                    || rebate.Percentage == 0 
+                    || product.Price == 0 
+                    || request.Volume == 0)
                 {
                     result.Success = false;
                 }
@@ -76,11 +72,9 @@ public class RebateService : IRebateService
                 break;
 
             case IncentiveType.AmountPerUom:
-                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.AmountPerUom))
-                {
-                    result.Success = false;
-                }
-                else if (rebate.Amount == 0 || request.Volume == 0)
+                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.AmountPerUom)
+                    || rebate.Amount == 0 
+                    || request.Volume == 0)
                 {
                     result.Success = false;
                 }
