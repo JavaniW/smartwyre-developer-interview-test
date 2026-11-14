@@ -32,14 +32,19 @@ public class RebateService : IRebateService
     // This makes sure that Calculate() is only focused on calculation
     private void ValidateRequest(Rebate rebate, Product product, CalculateRebateRequest request, CalculateRebateResult result, ref decimal rebateAmount)
     {
+        // I chose to do an early return here. There's no reason to continue executing following statements because we already know the request is invalid
+        // This also fixes a bug where a Null Reference Exception would be thrown if IncentiveType is FixedCashAmount and product is NULL
+        // I chose to use "is null" as opposed to "== null" to protect against the case where the "==" operator is overloaded
+        if (rebate is null || product is null)
+        {
+            result.Success = false;
+            return;
+        }
+        
         switch (rebate.Incentive)
         {
             case IncentiveType.FixedCashAmount:
-                if (rebate == null)
-                {
-                    result.Success = false;
-                }
-                else if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedCashAmount))
+                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedCashAmount))
                 {
                     result.Success = false;
                 }
@@ -55,15 +60,7 @@ public class RebateService : IRebateService
                 break;
 
             case IncentiveType.FixedRateRebate:
-                if (rebate == null)
-                {
-                    result.Success = false;
-                }
-                else if (product == null)
-                {
-                    result.Success = false;
-                }
-                else if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedRateRebate))
+                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedRateRebate))
                 {
                     result.Success = false;
                 }
@@ -79,15 +76,7 @@ public class RebateService : IRebateService
                 break;
 
             case IncentiveType.AmountPerUom:
-                if (rebate == null)
-                {
-                    result.Success = false;
-                }
-                else if (product == null)
-                {
-                    result.Success = false;
-                }
-                else if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.AmountPerUom))
+                if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.AmountPerUom))
                 {
                     result.Success = false;
                 }
