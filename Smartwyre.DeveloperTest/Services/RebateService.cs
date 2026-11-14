@@ -17,7 +17,7 @@ public class RebateService : IRebateService
 
         var rebateAmount = 0m;
         
-        ValidateRequest(rebate, product, request, result, ref rebateAmount);
+        result.Success = ValidateRequest(rebate, product, request, ref rebateAmount);
 
         if (result.Success)
         {
@@ -30,15 +30,14 @@ public class RebateService : IRebateService
 
     // I chose to extract all the validation logic into its own method
     // This makes sure that Calculate() is only focused on calculation
-    private void ValidateRequest(Rebate rebate, Product product, CalculateRebateRequest request, CalculateRebateResult result, ref decimal rebateAmount)
+    private bool ValidateRequest(Rebate rebate, Product product, CalculateRebateRequest request, ref decimal rebateAmount)
     {
         // I chose to do an early return here. There's no reason to continue executing following statements because we already know the request is invalid
         // This also fixes a bug where a Null Reference Exception would be thrown if IncentiveType is FixedCashAmount and product is NULL
         // I chose to use "is null" as opposed to "== null" to protect against the case where the "==" operator is overloaded
         if (rebate is null || product is null)
         {
-            result.Success = false;
-            return;
+            return false;
         }
         
         switch (rebate.Incentive)
@@ -47,43 +46,36 @@ public class RebateService : IRebateService
                 if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedCashAmount)
                     || rebate.Amount == 0)
                 {
-                    result.Success = false;
+                    return false;
                 }
-                else
-                {
-                    rebateAmount = rebate.Amount;
-                    result.Success = true;
-                }
+                
+                rebateAmount = rebate.Amount;
                 break;
-
+            
             case IncentiveType.FixedRateRebate:
                 if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.FixedRateRebate)
                     || rebate.Percentage == 0 
                     || product.Price == 0 
                     || request.Volume == 0)
                 {
-                    result.Success = false;
+                    return false;
                 }
-                else
-                {
-                    rebateAmount += product.Price * rebate.Percentage * request.Volume;
-                    result.Success = true;
-                }
+                
+                rebateAmount += product.Price * rebate.Percentage * request.Volume;
                 break;
-
+            
             case IncentiveType.AmountPerUom:
                 if (!product.SupportedIncentives.HasFlag(SupportedIncentiveType.AmountPerUom)
                     || rebate.Amount == 0 
                     || request.Volume == 0)
                 {
-                    result.Success = false;
+                    return false;
                 }
-                else
-                {
-                    rebateAmount += rebate.Amount * request.Volume;
-                    result.Success = true;
-                }
+                
+                rebateAmount += rebate.Amount * request.Volume;
                 break;
         }
+
+        return true;
     }
 }
