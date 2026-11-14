@@ -16,7 +16,22 @@ public class RebateService : IRebateService
         var result = new CalculateRebateResult();
 
         var rebateAmount = 0m;
+        
+        ValidateRequest(rebate, product, request, result, ref rebateAmount);
 
+        if (result.Success)
+        {
+            var storeRebateDataStore = new RebateDataStore();
+            storeRebateDataStore.StoreCalculationResult(rebate, rebateAmount);
+        }
+
+        return result;
+    }
+
+    // I chose to extract all the validation logic into its own method
+    // This makes sure that Calculate() is only focused on calculation
+    private void ValidateRequest(Rebate rebate, Product product, CalculateRebateRequest request, CalculateRebateResult result, ref decimal rebateAmount)
+    {
         switch (rebate.Incentive)
         {
             case IncentiveType.FixedCashAmount:
@@ -87,13 +102,5 @@ public class RebateService : IRebateService
                 }
                 break;
         }
-
-        if (result.Success)
-        {
-            var storeRebateDataStore = new RebateDataStore();
-            storeRebateDataStore.StoreCalculationResult(rebate, rebateAmount);
-        }
-
-        return result;
     }
 }
