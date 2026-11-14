@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
+using Smartwyre.DeveloperTest.Data;
 using Smartwyre.DeveloperTest.Services;
 using Smartwyre.DeveloperTest.Types;
 
@@ -9,6 +11,13 @@ class Program
 {
     static void Main(string[] args)
     {
+        var services = new ServiceCollection()
+            .AddSingleton<IRebateDataStore, RebateDataStore>()
+            .AddSingleton<IProductDataStore, ProductDataStore>()
+            .AddTransient<IRebateService, RebateService>()
+            .BuildServiceProvider();
+        var rebateService = services.GetRequiredService<IRebateService>();
+        
         if (args.Length != 3)
         {
             Console.Error.WriteLine("Usage: Runner <rebateIdentifier> <productIdentifier> <volume>");
@@ -29,9 +38,7 @@ class Program
             ProductIdentifier = args[1],
             Volume = volume
         };
-
-        IRebateService rebateService = new RebateService();
-
+        
         try
         {
             var result = rebateService.Calculate(request);

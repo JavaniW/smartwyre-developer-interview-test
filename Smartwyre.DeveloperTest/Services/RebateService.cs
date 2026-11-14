@@ -6,12 +6,19 @@ namespace Smartwyre.DeveloperTest.Services;
 
 public class RebateService : IRebateService
 {
+    private readonly IRebateDataStore _rebateDataStore;
+    private readonly IProductDataStore _productDataStore;
+
+    public RebateService(IRebateDataStore rebateDataStore, IProductDataStore productDataStore)
+    {
+        _rebateDataStore = rebateDataStore;
+        _productDataStore = productDataStore;
+    }
+    
     public CalculateRebateResult Calculate(CalculateRebateRequest request)
     {
-        var rebateDataStore = new RebateDataStore();
-        var productDataStore = new ProductDataStore();
-        var rebate = rebateDataStore.GetRebate(request.RebateIdentifier);
-        var product = productDataStore.GetProduct(request.ProductIdentifier);
+        var rebate = _rebateDataStore.GetRebate(request.RebateIdentifier);
+        var product =_productDataStore.GetProduct(request.ProductIdentifier);
         var result = new CalculateRebateResult();
         
         result.Success = ValidateRequest(rebate, product, request.Volume);
@@ -21,7 +28,6 @@ public class RebateService : IRebateService
         }
 
         var rebateAmount = 0m;
-        var storeRebateDataStore = new RebateDataStore();
         switch (rebate.Incentive)
         {
             case IncentiveType.FixedCashAmount:
@@ -36,7 +42,7 @@ public class RebateService : IRebateService
             default:
                 throw new ArgumentOutOfRangeException(nameof(rebate.Incentive), rebate.Incentive, "Invalid incentive value");
         }
-        storeRebateDataStore.StoreCalculationResult(rebate, rebateAmount);
+        _rebateDataStore.StoreCalculationResult(rebate, rebateAmount);
         
         return result;
     }
