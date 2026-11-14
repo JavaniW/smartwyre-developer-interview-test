@@ -40,7 +40,7 @@ public class RebateService : IRebateService
                 rebateAmount += rebate.Amount * request.Volume;
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(rebate.Incentive), rebate.Incentive, "Invalid incentive value");
+                throw new ArgumentOutOfRangeException(nameof(rebate.Incentive), rebate.Incentive, "Invalid incentive value"); // unreachable
         }
         _rebateDataStore.StoreCalculationResult(rebate, rebateAmount);
         
@@ -86,7 +86,7 @@ public class RebateService : IRebateService
                 }
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(rebate.Incentive), rebate.Incentive, "Invalid incentive value");
+                return false;
         }
 
         return true;
