@@ -21,8 +21,8 @@ public class RebateService : IRebateService
         var product =_productDataStore.GetProduct(request.ProductIdentifier);
         var result = new CalculateRebateResult();
         
-        result.Success = ValidateRequest(rebate, product, request.Volume);
-        if (!result.Success)
+        // I chose to do an early return here. There's no reason to continue executing following statements because we already know the result is unsuccessful
+        if (!IsValidateRequest(rebate, product, request.Volume))
         {
             return result;
         }
@@ -43,13 +43,14 @@ public class RebateService : IRebateService
                 throw new ArgumentOutOfRangeException(nameof(rebate.Incentive), rebate.Incentive, "Invalid incentive value"); // unreachable
         }
         _rebateDataStore.StoreCalculationResult(rebate, rebateAmount);
-        
+        result.Success = true;
         return result;
     }
 
     // I chose to extract all the validation logic into its own method
     // This makes sure that Calculate() is only focused on calculation
-    private bool ValidateRequest(Rebate rebate, Product product, decimal volume)
+    // I typically like to prefix "Is" to the name of methods that return a boolean 
+    private bool IsValidateRequest(Rebate rebate, Product product, decimal volume)
     {
         // I chose to do an early return here. There's no reason to continue executing following statements because we already know the request is invalid
         // This also fixes a bug where a Null Reference Exception would be thrown if IncentiveType is FixedCashAmount and product is NULL
